@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Simplefly — Panel de Administración</title>
+<link href="https://fonts.googleapis.com/css2?family=Parkinsans:wght@400;700&family=Raleway:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --n:#0D1F75;--b:#3A46A0;--pk:#FFB4B4;--pd:#FF7D87;
+  --bg:#F5F6FA;--cd:#fff;--br:rgba(13,31,117,0.12);--mu:#6B7BAE;
+}
+body{font-family:'Raleway',sans-serif;background:var(--n);}
+
+/* LOGIN */
+#login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0D1F75 0%,#3A46A0 60%,#FFB4B4 100%);}
+.lcard{background:#fff;border-radius:20px;padding:2rem;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(13,31,117,0.3);}
+.llogo{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;}
+.liso{width:44px;height:44px;border-radius:12px;background:var(--pk);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.liso img{width:38px;height:27px;object-fit:contain;}
+.lbrand{font-family:'Parkinsans',sans-serif;font-size:22px;font-weight:700;color:var(--n);}
+.lsub{font-size:12px;color:var(--mu);margin-bottom:1.5rem;}
+.lfield{margin-bottom:14px;}
+.lfield label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;}
+.lfield input{width:100%;padding:11px 14px;font-size:14px;font-family:'Raleway',sans-serif;border-radius:12px;border:1.5px solid var(--br);background:var(--bg);color:var(--n);outline:none;}
+.lfield input:focus{border-color:var(--b);}
+.lbtn{width:100%;padding:13px;font-size:15px;font-family:'Parkinsans',sans-serif;font-weight:700;border-radius:14px;border:none;background:var(--n);color:#fff;cursor:pointer;margin-top:4px;}
+.lbtn:hover{background:var(--b);}
+.lhint{font-size:11px;color:var(--mu);margin-top:12px;text-align:center;}
+
+/* APP */
+#app-screen{display:none;flex-direction:column;min-height:100vh;background:var(--bg);}
+.topbar{background:var(--n);padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50;}
+.tb-iso{width:32px;height:32px;border-radius:9px;background:var(--pk);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tb-iso img{width:28px;height:20px;object-fit:contain;}
+.tb-name{font-family:'Parkinsans',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+.tb-badge{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.apill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 12px;}
+.adot{width:22px;height:22px;border-radius:50%;background:var(--pk);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--n);}
+.aname{font-size:11px;color:#fff;font-weight:600;}
+.lout-btn{background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);font-size:11px;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:'Raleway',sans-serif;}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;}
+.sidebar{width:185px;background:var(--cd);border-right:1px solid var(--br);flex-shrink:0;padding:16px 0;position:sticky;top:53px;height:calc(100vh - 53px);overflow-y:auto;}
+.sb-sec{margin-bottom:18px;}
+.sb-lbl{font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.6px;padding:0 16px;margin-bottom:5px;display:block;}
+.sbi{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;font-size:12px;font-weight:600;color:var(--mu);border-left:2px solid transparent;border:none;background:none;width:100%;text-align:left;font-family:'Raleway',sans-serif;}
+.sbi svg{width:14px;height:14px;stroke:currentColor;flex-shrink:0;}
+.sbi:hover{color:var(--n);background:var(--bg);}
+.sbi.on{color:var(--n);background:rgba(13,31,117,0.05);border-left:2px solid var(--n);}
+.sbcnt{margin-left:auto;background:var(--n);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;}
+.sbcnt.or{background:var(--pd);}
+
+/* MAIN */
+.main{flex:1;padding:22px;overflow-y:auto;}
+.page{display:none;}
+.page.on{display:block;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.pt{font-family:'Parkinsans',sans-serif;font-size:19px;font-weight:700;color:var(--n);}
+.ps{font-size:11px;color:var(--mu);margin-top:2px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btnp{background:var(--n);color:#fff;font-size:12px;font-weight:700;padding:9px 16px;border-radius:12px;border:none;cursor:pointer;font-family:'Parkinsans',sans-serif;display:inline-flex;align-items:center;gap:6px;}
+.btnp svg{width:13px;height:13px;stroke:#fff;}
+.btnp:hover{background:var(--b);}
+.btns{background:var(--cd);color:var(--n);font-size:12px;font-weight:600;padding:8px 14px;border-radius:11px;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:'Raleway',sans-serif;}
+.btns svg{width:13px;height:13px;stroke:var(--n);}
+.btns:hover{background:var(--bg);}
+.btnd{background:#FFE8E8;color:#A00D1F;font-size:12px;font-weight:700;padding:8px 14px;border-radius:11px;border:1px solid #F7C1C1;cursor:pointer;font-family:'Raleway',sans-serif;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px;}
+.sc{background:var(--cd);border-radius:14px;border:1px solid var(--br);padding:15px;}
+.scl{font-size:10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;}
+.scn{font-family:'Parkinsans',sans-serif;font-size:26px;font-weight:700;color:var(--n);line-height:1;}
+.scs{font-size:10px;color:var(--mu);margin-top:4px;}
+
+/* ALERT */
+.alert{background:#E8F5E9;border:1px solid #A5D6A7;border-radius:12px;padding:10px 15px;font-size:11px;color:#1B5E20;display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+.alert svg{width:14px;height:14px;stroke:#1B5E20;flex-shrink:0;}
+
+/* SECTION DIVIDER */
+.sd{font-family:'Parkinsans',sans-serif;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;padding:12px 0 7px;display:flex;align-items:center;gap:8px;}
+.sd::after{content:'';flex:1;height:1px;background:var(--br);}
+
+/* VIAJE ROW */
+.vrow{background:var(--cd);border-radius:14px;border:1px solid var(--br);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:13px;transition:border-color .12s;}
+.vrow:hover{border-color:rgba(13,31,117,0.3);}
+.av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Parkinsans',sans-serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.vi{flex:1;min-width:0;}
+.vn{font-family:'Parkinsans',sans-serif;font-size:13px;font-weight:700;color:var(--n);}
+.vd{font-size:10px;color:var(--mu);margin-top:1px;}
+.vt{font-size:9px;color:var(--mu);}
+.vpw{width:88px;flex-shrink:0;}
+.vpl{font-size:9px;color:var(--mu);text-align:center;margin-bottom:3px;}
+.vp{height:5px;background:rgba(13,31,117,0.08);border-radius:3px;overflow:hidden;}
+.vpf{height:100%;background:linear-gradient(90deg,var(--n),var(--pd));border-radius:3px;}
+.vstatus{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.vs-ok{background:#E8F5E9;color:#1B5E20;}
+.vs-up{background:#E8EAF6;color:var(--n);}
+.vs-pa{background:rgba(13,31,117,0.07);color:var(--mu);}
+.vacts{display:flex;gap:6px;flex-shrink:0;}
+.iab{width:30px;height:30px;border-radius:9px;border:1px solid var(--br);background:var(--cd);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.iab svg{width:13px;height:13px;stroke:var(--mu);}
+.iab:hover{background:var(--bg);border-color:var(--n);}
+.iab.edit-ab{background:var(--n);border-color:var(--n);}
+.iab.edit-ab svg{stroke:#fff;}
+.iab.copy-ab{background:var(--b);border-color:var(--b);}
+.iab.copy-ab svg{stroke:#fff;}
+
+/* FILTERS */
+.filters{display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap;}
+.ftab{padding:6px 13px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--br);background:var(--cd);color:var(--mu);font-family:'Raleway',sans-serif;}
+.ftab.on{background:var(--n);color:#fff;border-color:var(--n);}
+
+/* FORM */
+.fcard{background:var(--cd);border-radius:16px;border:1px solid var(--br);padding:20px;margin-bottom:14px;}
+.fct{font-family:'Parkinsans',sans-serif;font-size:13px;font-weight:700;color:var(--n);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.fct svg{width:15px;height:15px;stroke:var(--n);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.f{display:flex;flex-direction:column;gap:4px;}
+.f.full{grid-column:1/-1;}
+.f label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;}
+.f input,.f select,.f textarea{padding:9px 12px;font-size:12px;font-family:'Raleway',sans-serif;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--n);width:100%;outline:none;}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--b);background:#fff;}
+.f textarea{resize:vertical;min-height:65px;line-height:1.5;}
+.fa{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap;}
+
+/* FORM TABS */
+.ftabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid var(--br);padding-bottom:13px;}
+.fth{padding:7px 15px;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--mu);font-family:'Raleway',sans-serif;}
+.fth.on{background:var(--n);color:#fff;}
+
+/* ITEM BLOCKS */
+.iblock{background:var(--cd);border-radius:14px;border:1px solid var(--br);margin-bottom:12px;overflow:hidden;}
+.ibh{background:rgba(13,31,117,0.03);padding:11px 15px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--br);}
+.ibl{font-family:'Parkinsans',sans-serif;font-size:12px;font-weight:700;color:var(--n);display:flex;align-items:center;gap:7px;}
+.ibl svg{width:13px;height:13px;stroke:var(--n);}
+.ibrm{background:none;border:none;cursor:pointer;font-size:11px;color:var(--mu);font-family:'Raleway',sans-serif;font-weight:600;}
+.ibrm:hover{color:#A00D1F;}
+.ibb{padding:16px;}
+.divider{height:1px;background:var(--br);margin:13px 0;}
+.addbtn{width:100%;padding:11px;border:1.5px dashed rgba(13,31,117,0.2);border-radius:13px;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--b);font-family:'Raleway',sans-serif;margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:7px;}
+.addbtn:hover{border-color:var(--n);color:var(--n);}
+.addbtn svg{width:14px;height:14px;stroke:currentColor;}
+
+/* DOCS */
+.du{background:var(--bg);border-radius:12px;padding:13px;}
+.dut{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;}
+.docrow{display:flex;align-items:center;gap:9px;background:var(--cd);border-radius:10px;padding:8px 12px;border:1px solid var(--br);margin-bottom:6px;}
+.docic{width:28px;height:28px;border-radius:8px;background:#FFE8E8;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.docic svg{width:14px;height:14px;stroke:#A00D1F;}
+.docnm{font-size:12px;font-weight:600;color:var(--n);flex:1;}
+.docsz{font-size:10px;color:var(--mu);}
+.docbadge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;background:#E8F5E9;color:#1B5E20;}
+.docdel{background:none;border:none;cursor:pointer;opacity:.3;font-size:16px;color:var(--n);}
+.uzzone{width:100%;border:1.5px dashed rgba(13,31,117,0.2);border-radius:12px;padding:13px;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;}
+.uzzone:hover{border-color:var(--n);}
+.uzzone svg{width:19px;height:19px;stroke:var(--n);}
+.uzt{font-size:12px;font-weight:600;color:var(--n);}
+.uzs{font-size:10px;color:var(--mu);}
+input[type=file]{display:none;}
+
+/* EDIT HEADER */
+.edit-hdr{background:var(--n);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.edit-av{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:'Parkinsans',sans-serif;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;background:rgba(255,255,255,0.15);}
+.edit-inf{flex:1;}
+.edit-name{font-family:'Parkinsans',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+.edit-dest{font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px;}
+.edit-dates{font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;}
+.edit-pct{font-family:'Parkinsans',sans-serif;font-size:22px;font-weight:700;color:var(--pk);}
+.edit-plbl{font-size:9px;color:rgba(255,255,255,0.5);}
+.edit-pbar{width:80px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;overflow:hidden;margin-top:4px;}
+.edit-pfill{height:100%;background:var(--pk);border-radius:2px;}
+.edit-tag{background:rgba(255,255,255,0.15);color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:20px;}
+
+/* ITINERARIO */
+.itin-day{background:var(--cd);border-radius:13px;border:1px solid var(--br);padding:12px 14px;margin-bottom:7px;display:flex;align-items:flex-start;gap:12px;}
+.itin-day.today{border-color:var(--pd);border-width:2px;}
+.daynum{width:34px;height:34px;border-radius:10px;background:var(--n);display:flex;align-items:center;justify-content:center;font-family:'Parkinsans',sans-serif;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.daynum.past{background:var(--mu);}
+.daynum.today{background:var(--pd);}
+.dayinfo{flex:1;}
+.daytitle{font-family:'Parkinsans',sans-serif;font-size:13px;font-weight:700;color:var(--n);}
+.daytitle.today{color:var(--pd);}
+.daycity{font-size:10px;color:var(--mu);margin-top:1px;}
+.daydesc{font-size:10px;color:var(--mu);margin-top:4px;line-height:1.5;}
+.dayedit{width:26px;height:26px;border-radius:7px;border:1px solid var(--br);background:var(--cd);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.dayedit svg{width:11px;height:11px;stroke:var(--mu);}
+
+/* PRESUPUESTO */
+.pcard{background:var(--cd);border-radius:14px;border:1px solid var(--br);padding:14px 16px;margin-bottom:9px;}
+.ptop{display:flex;align-items:flex-start;gap:12px;margin-bottom:9px;}
+.pav{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-family:'Parkinsans',sans-serif;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.pinn{flex:1;}
+.pnum{font-size:9px;font-weight:700;color:var(--mu);margin-bottom:1px;}
+.pname{font-family:'Parkinsans',sans-serif;font-size:13px;font-weight:700;color:var(--n);}
+.pdest{font-size:10px;color:var(--mu);}
+.pr{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.pprice{font-family:'Parkinsans',sans-serif;font-size:15px;font-weight:700;color:var(--n);}
+.ppax{font-size:9px;color:var(--mu);}
+.spill{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.s-sol{background:#F3E8FF;color:#5B0DA0;}
+.s-cre{background:#E8EAF6;color:var(--n);}
+.s-env{background:#FFF8E1;color:#7A5200;}
+.s-mod{background:#FFF0E0;color:#7A3800;}
+.s-con{background:#E8F5E9;color:#1B5E20;}
+.s-via{background:var(--n);color:#fff;}
+.pfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.pmeta{font-size:10px;color:var(--mu);flex:1;}
+.pacts{display:flex;gap:5px;}
+.iab2{width:28px;height:28px;border-radius:8px;border:1px solid var(--br);background:var(--cd);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.iab2 svg{width:12px;height:12px;stroke:var(--mu);}
+.iab2:hover{background:var(--bg);}
+.iab2.gr{background:#E8F5E9;border-color:#A5D6A7;}
+.iab2.gr svg{stroke:#1B5E20;}
+
+/* PIPELINE */
+.pipeline{display:flex;margin-bottom:16px;border-radius:12px;overflow:hidden;border:1px solid var(--br);}
+.pp{flex:1;text-align:center;padding:10px 4px;background:var(--cd);border-right:1px solid var(--br);}
+.pp:last-child{border-right:none;}
+.pp.hi{background:var(--n);}
+.ppn{font-family:'Parkinsans',sans-serif;font-size:19px;font-weight:700;color:var(--n);line-height:1;}
+.pp.hi .ppn{color:#fff;}
+.ppl{font-size:7px;font-weight:700;color:var(--mu);text-transform:uppercase;margin-top:2px;}
+.pp.hi .ppl{color:rgba(255,255,255,0.7);}
+
+/* CLIENTE */
+.crow{background:var(--cd);border-radius:14px;border:1px solid var(--br);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:13px;}
+.badge{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.b-ok{background:#E8F5E9;color:#1B5E20;}
+.b-inf{background:#E8EAF6;color:var(--n);}
+.b-pa{background:rgba(13,31,117,0.07);color:var(--mu);}
+
+/* NP */
+.np-addrow{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:6px;}
+.np-addrow input{padding:9px 11px;font-size:12px;font-family:'Raleway',sans-serif;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--n);outline:none;}
+.np-addbtn{padding:9px 14px;background:var(--n);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Raleway',sans-serif;white-space:nowrap;}
+.nprow{display:flex;align-items:center;gap:9px;background:var(--bg);border-radius:10px;padding:9px 12px;border:1px solid var(--br);margin-bottom:6px;}
+.npic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.npic svg{width:12px;height:12px;}
+.npnm{font-size:12px;font-weight:600;color:var(--n);flex:1;}
+.npsd{font-size:10px;color:var(--mu);}
+.npdel{background:none;border:none;cursor:pointer;font-size:17px;color:var(--mu);opacity:.4;}
+.desrow{display:grid;grid-template-columns:1fr 1fr 32px;gap:8px;margin-bottom:6px;}
+.desrow input{padding:8px 10px;font-size:12px;font-family:'Raleway',sans-serif;border-radius:9px;border:1px solid var(--br);background:var(--bg);color:var(--n);outline:none;}
+.desrow button{width:32px;height:36px;border-radius:9px;border:1px solid var(--br);background:var(--cd);cursor:pointer;font-size:16px;color:var(--mu);}
+.total-box{background:var(--n);border-radius:13px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-top:12px;}
+.total-lbl{font-size:11px;color:rgba(255,255,255,0.6);}
+.total-pax{font-size:10px;color:var(--pk);margin-top:2px;}
+.total-num{font-family:'Parkinsans',sans-serif;font-size:22px;font-weight:700;color:#fff;}
+
+/* MODAL */
+.moverlay{position:fixed;inset:0;background:rgba(13,31,117,0.3);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.moverlay.open{display:flex;}
+.modal{background:var(--cd);border-radius:20px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;}
+.mt{font-family:'Parkinsans',sans-serif;font-size:16px;font-weight:700;color:var(--n);margin-bottom:5px;}
+.ms{font-size:12px;color:var(--mu);margin-bottom:16px;}
+.cinc{background:var(--bg);border-radius:11px;padding:12px;margin-bottom:14px;}
+.cinct{font-size:12px;font-weight:700;color:var(--n);margin-bottom:8px;}
+.ci{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mu);margin-bottom:5px;}
+.cichk{width:16px;height:16px;border-radius:4px;background:#E8F5E9;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cichk svg{width:10px;height:10px;stroke:#1B5E20;}
+.mf{margin-bottom:11px;}
+.mf label{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;display:block;margin-bottom:4px;}
+.mf input,.mf select{width:100%;padding:9px 12px;font-size:12px;font-family:'Raleway',sans-serif;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--n);outline:none;}
+.m2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+
+/* EMPTY / LOADING */
+.empty{text-align:center;padding:40px;color:var(--mu);}
+.empty svg{width:40px;height:40px;stroke:var(--br);margin:0 auto 12px;display:block;}
+.empty p{font-size:13px;}
+.loading{text-align:center;padding:40px;color:var(--mu);font-size:13px;}
+.loading::before{content:'';display:block;width:32px;height:32px;border:3px solid var(--br);border-top-color:var(--n);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast-el{position:fixed;bottom:22px;right:22px;background:var(--n);color:#fff;padding:12px 18px;border-radius:14px;font-size:12px;font-weight:600;font-family:'Parkinsans',sans-serif;display:none;z-index:999;box-shadow:0 4px 20px rgba(13,31,117,0.3);}
+
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .vpw{display:none;}
+  .fg3{grid-template-columns:1fr 1fr;}
+}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lcard">
+    <div class="llogo"><div class="liso"><img src="data:image/png;base64,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" alt="Simplefly"/></div><span class="lbrand">Simplefly</span></div>
+    <div class="lsub">Ingresá con tu cuenta de agente</div>
+    <div class="lfield"><label>Email</label><input type="email" id="login-email" placeholder="bruno@simplefly.com"/></div>
+    <div class="lfield"><label>Contraseña</label><input type="password" id="login-pass" placeholder="••••••••"/></div>
+    <button class="lbtn" onclick="doLogin()">Ingresar al panel</button>
+    <div id="login-err" style="display:none;background:#FFE8E8;color:#A00D1F;font-size:11px;padding:8px 12px;border-radius:10px;margin-top:10px;"></div>
+    <div class="lhint">Ingresá cualquier email y contraseña para entrar</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="tb-iso"><img src="data:image/png;base64,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" alt=""/></div>
+    <span class="tb-name">Simplefly</span>
+    <span class="tb-badge">Panel de administración</span>
+    <div class="tb-right">
+      <div class="apill"><div class="adot" id="agent-dot">BR</div><span class="aname" id="agent-name">Bruno</span></div>
+      <button class="lout-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sb-sec">
+        <span class="sb-lbl">Principal</span>
+        <button class="sbi on" id="sbi-dash" onclick="gp('dash')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</button>
+        <button class="sbi" id="sbi-viajes" onclick="gp('viajes')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>Viajes<span class="sbcnt" id="cnt-viajes">0</span></button>
+        <button class="sbi" id="sbi-pres" onclick="gp('pres')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>Presupuestos<span class="sbcnt or" id="cnt-pres">0</span></button>
+        <button class="sbi" id="sbi-cli" onclick="gp('cli')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Clientes<span class="sbcnt" id="cnt-cli">0</span></button>
+      </div>
+      <div class="sb-sec">
+        <span class="sb-lbl">Crear</span>
+        <button class="sbi" id="sbi-nv" onclick="gp('nv')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Nuevo viaje</button>
+        <button class="sbi" id="sbi-ncli" onclick="gp('ncli')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>Nuevo cliente</button>
+        <button class="sbi" id="sbi-np" onclick="gp('np')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Nuevo presupuesto</button>
+      </div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div id="p-dash" class="page on">
+        <div class="ph">
+          <div><div class="pt" id="dash-greet">Buen día</div><div class="ps" id="dash-date"></div></div>
+          <div class="btn-row">
+            <button class="btns" onclick="gp('np')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>Presupuesto</button>
+            <button class="btnp" onclick="gp('nv')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Nuevo viaje</button>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="sc"><div class="scl">Activos</div><div class="scn" id="st-activos">—</div><div class="scs">En curso</div></div>
+          <div class="sc"><div class="scl">Próximos</div><div class="scn" id="st-proximos">—</div><div class="scs">30 días</div></div>
+          <div class="sc"><div class="scl">Clientes</div><div class="scn" id="st-clientes">—</div><div class="scs">Registrados</div></div>
+          <div class="sc"><div class="scl">Presupuestos</div><div class="scn" id="st-pres">—</div><div class="scs">Activos</div></div>
+        </div>
+        <div class="alert"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07"/><path d="M1 1l22 22"/></svg>Revisá los viajes activos y presupuestos pendientes</div>
+        <div id="dash-content"><div class="loading"></div></div>
+      </div>
+
+      <!-- VIAJES -->
+      <div id="p-viajes" class="page">
+        <div class="ph"><div><div class="pt">Viajes</div><div class="ps" id="viajes-sub">Cargando...</div></div><button class="btnp" onclick="gp('nv')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Nuevo viaje</button></div>
+        <div class="filters">
+          <button class="ftab on" onclick="filtV(this,'todos')">Todos</button>
+          <button class="ftab" onclick="filtV(this,'Activo')">En curso</button>
+          <button class="ftab" onclick="filtV(this,'Proximo')">Próximos</button>
+          <button class="ftab" onclick="filtV(this,'Finalizado')">Finalizados</button>
+        </div>
+        <div id="viajes-list"><div class="loading"></div></div>
+      </div>
+
+      <!-- EDITAR VIAJE -->
+      <div id="p-edit" class="page">
+        <div class="ph">
+          <div><div class="pt">Editar viaje</div><div class="ps" id="edit-sub">—</div></div>
+          <div class="btn-row"><button class="btns" onclick="gp('viajes')">← Viajes</button><button class="btnd" onclick="deleteViaje()">Eliminar viaje</button><button class="btnp" onclick="saveViaje()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Guardar cambios</button></div>
+        </div>
+        <div class="edit-hdr" id="edit-hdr"></div>
+        <div class="ftabs">
+          <button class="fth on" id="eth-1" onclick="goET(1)">Datos generales</button>
+          <button class="fth" id="eth-2" onclick="goET(2)">Vuelos</button>
+          <button class="fth" id="eth-3" onclick="goET(3)">Hoteles</button>
+          <button class="fth" id="eth-4" onclick="goET(4)">Actividades</button>
+          <button class="fth" id="eth-5" onclick="goET(5)">Itinerario</button>
+        </div>
+        <div id="et-1"></div>
+        <div id="et-2" style="display:none;"></div>
+        <div id="et-3" style="display:none;"></div>
+        <div id="et-4" style="display:none;"></div>
+        <div id="et-5" style="display:none;"></div>
+      </div>
+
+      <!-- NUEVO VIAJE -->
+      <div id="p-nv" class="page">
+        <div class="ph"><div><div class="pt">Nuevo viaje</div><div class="ps">Completá los 5 pasos</div></div><button class="btns" onclick="gp('viajes')">← Cancelar</button></div>
+        <div class="ftabs">
+          <button class="fth on" id="nvt-1" onclick="goNVT(1)">1. Cliente</button>
+          <button class="fth" id="nvt-2" onclick="goNVT(2)">2. Vuelos</button>
+          <button class="fth" id="nvt-3" onclick="goNVT(3)">3. Hoteles</button>
+          <button class="fth" id="nvt-4" onclick="goNVT(4)">4. Actividades</button>
+          <button class="fth" id="nvt-5" onclick="goNVT(5)">5. Itinerario</button>
+        </div>
+        <div id="nvtab-1">
+          <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Cliente</div><div class="fg">
+            <div class="f"><label>Cliente existente</label><select id="nv-clisel" onchange="autoFillCli()"><option value="">— Nuevo cliente —</option></select></div>
+            <div class="f"><label>Nombre completo</label><input type="text" id="nv-nombre" placeholder="María González"/></div>
+            <div class="f"><label>Email</label><input type="email" id="nv-email" placeholder="cliente@email.com"/></div>
+            <div class="f"><label>Teléfono</label><input type="text" id="nv-tel" placeholder="+54 9 261 000 0000"/></div>
+          </div></div>
+          <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>Datos del viaje</div><div class="fg">
+            <div class="f full"><label>Nombre del paquete</label><input type="text" id="nv-destino" placeholder="Europa del Este 14 noches"/></div>
+            <div class="f"><label>Fecha inicio</label><input type="date" id="nv-inicio"/></div>
+            <div class="f"><label>Fecha regreso</label><input type="date" id="nv-fin"/></div>
+            <div class="f"><label>Agente</label><input type="text" id="nv-agente" placeholder="Bruno Raina"/></div>
+            <div class="f"><label>Estado</label><select id="nv-estado"><option>Proximo</option><option>Activo</option></select></div>
+            <div class="f full"><label>Descripción</label><textarea id="nv-desc" placeholder="Descripción del viaje..."></textarea></div>
+          </div></div>
+          <div class="fa"><button class="btnp" onclick="goNVT(2)">Continuar: Vuelos →</button></div>
+        </div>
+        <div id="nvtab-2" style="display:none;">
+          <div id="nv-vuelos-cont">
+            <div class="iblock" id="nvv-1"><div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>Vuelo 1</div></div>
+            <div class="ibb"><div class="fg3" style="margin-bottom:11px;">
+              <div class="f"><label>Aerolínea</label><input class="nv-aerolinea" placeholder="Aerolíneas Arg."/></div>
+              <div class="f"><label>Nro. vuelo</label><input class="nv-nrovuelo" placeholder="AR 141"/></div>
+              <div class="f"><label>Estado</label><select class="nv-vest"><option>Confirmado</option><option>Por confirmar</option></select></div>
+              <div class="f"><label>Origen</label><input class="nv-origen" placeholder="EZE"/></div>
+              <div class="f"><label>Destino</label><input class="nv-vdestino" placeholder="BUD"/></div>
+              <div class="f"><label>Duración</label><input class="nv-duracion" placeholder="14h 20m"/></div>
+              <div class="f"><label>Salida</label><input type="datetime-local" class="nv-salida"/></div>
+              <div class="f"><label>Llegada</label><input class="nv-llegada" placeholder="13:00+1"/></div>
+              <div class="f"><label>Asiento</label><input class="nv-asiento" placeholder="24C"/></div>
+              <div class="f full"><label>Link check-in</label><input type="url" class="nv-checkin" placeholder="https://aerolinas.com/check-in"/></div>
+            </div><div class="divider"></div>
+            <div class="du"><div class="dut">Documentos del vuelo</div><div id="nvdocs-v1"></div>
+            <button class="uzzone" onclick="trig('nvinp-v1')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="uzt">Subir boarding pass / e-ticket</div><div class="uzs">PDF, JPG, PNG</div></button>
+            <input type="file" id="nvinp-v1" accept=".pdf,.jpg,.png" onchange="addDoc('nvdocs-v1',this,'Boarding pass')">
+            </div></div></div>
+          </div>
+          <button class="addbtn" onclick="addNVVuelo()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Agregar otro vuelo</button>
+          <div class="fa"><button class="btns" onclick="goNVT(1)">← Anterior</button><button class="btnp" onclick="goNVT(3)">Continuar: Hoteles →</button></div>
+        </div>
+        <div id="nvtab-3" style="display:none;">
+          <div id="nv-hoteles-cont">
+            <div class="iblock" id="nvh-1"><div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Hotel 1</div></div>
+            <div class="ibb"><div class="fg" style="margin-bottom:11px;">
+              <div class="f full"><label>Nombre del hotel</label><input class="nv-hnombre" placeholder="Corinthia Hotel Budapest"/></div>
+              <div class="f"><label>Ciudad</label><input class="nv-hciudad" placeholder="Budapest, Hungría"/></div>
+              <div class="f"><label>Categoría</label><select class="nv-hcat"><option>5</option><option>4</option><option>3</option><option>2</option></select></div>
+              <div class="f"><label>Check-in</label><input type="date" class="nv-hcheckin"/></div>
+              <div class="f"><label>Check-out</label><input type="date" class="nv-hcheckout"/></div>
+              <div class="f"><label>Habitación</label><input class="nv-hhab" placeholder="Suite Deluxe"/></div>
+              <div class="f"><label>Nro. reserva</label><input class="nv-hreserva" placeholder="COR-2025-0001"/></div>
+              <div class="f"><label>Desayuno</label><select class="nv-hdesayuno"><option>Incluido</option><option>No incluido</option></select></div>
+            </div><div class="divider"></div>
+            <div class="du"><div class="dut">Documentos del hotel</div><div id="nvdocs-h1"></div>
+            <button class="uzzone" onclick="trig('nvinp-h1')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="uzt">Subir confirmación / voucher</div><div class="uzs">PDF, JPG, PNG</div></button>
+            <input type="file" id="nvinp-h1" accept=".pdf,.jpg,.png" onchange="addDoc('nvdocs-h1',this,'Reserva')">
+            </div></div></div>
+          </div>
+          <button class="addbtn" onclick="addNVHotel()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Agregar otro hotel</button>
+          <div class="fa"><button class="btns" onclick="goNVT(2)">← Anterior</button><button class="btnp" onclick="goNVT(4)">Continuar: Actividades →</button></div>
+        </div>
+        <div id="nvtab-4" style="display:none;">
+          <div id="nv-acts-cont">
+            <div class="iblock" id="nva-1"><div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Actividad 1</div></div>
+            <div class="ibb"><div class="fg">
+              <div class="f"><label>Tipo</label><select class="nv-atipo"><option>Excursión</option><option>Traslado</option><option>Cena incluida</option><option>Show</option><option>Libre</option></select></div>
+              <div class="f"><label>Nombre</label><input class="nv-anombre" placeholder="Excursión Budapest"/></div>
+              <div class="f"><label>Ciudad</label><input class="nv-aciudad" placeholder="Budapest"/></div>
+              <div class="f"><label>Día</label><input type="number" class="nv-adia" placeholder="1" min="1"/></div>
+              <div class="f"><label>Horario</label><input class="nv-ahorario" placeholder="09:00 – 18:00"/></div>
+              <div class="f"><label>Estado</label><select class="nv-aestado"><option>Confirmada</option><option>Por confirmar</option></select></div>
+              <div class="f full"><label>Descripción</label><textarea class="nv-adesc" placeholder="Descripción para el cliente..."></textarea></div>
+              <div class="f full"><label>Tip del agente</label><textarea class="nv-atip" placeholder="Consejo práctico..."></textarea></div>
+            </div><div class="divider"></div>
+            <div class="du"><div class="dut">Documentos</div><div id="nvdocs-a1"></div>
+            <button class="uzzone" onclick="trig('nvinp-a1')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="uzt">Subir voucher / entrada</div><div class="uzs">PDF, JPG, PNG</div></button>
+            <input type="file" id="nvinp-a1" accept=".pdf,.jpg,.png" onchange="addDoc('nvdocs-a1',this,'Voucher')">
+            </div></div></div>
+          </div>
+          <button class="addbtn" onclick="addNVAct()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Agregar actividad o traslado</button>
+          <div class="fa"><button class="btns" onclick="goNVT(3)">← Anterior</button><button class="btnp" onclick="goNVT(5)">Continuar: Itinerario →</button></div>
+        </div>
+        <div id="nvtab-5" style="display:none;">
+          <div id="nv-itin-cont">
+            <div class="iblock" id="nvi-1"><div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Día 1</div></div>
+            <div class="ibb"><div class="fg">
+              <div class="f"><label>Título del día</label><input class="nv-itit" placeholder="Llegada a Budapest"/></div>
+              <div class="f"><label>Ciudad</label><input class="nv-iciudad" placeholder="Budapest, Hungría"/></div>
+              <div class="f full"><label>Descripción del día</label><textarea class="nv-idesc" placeholder="Resumen del día..."></textarea></div>
+              <div class="f full"><label>Tip del agente</label><textarea class="nv-itip" placeholder="Consejo del día..."></textarea></div>
+            </div></div></div>
+          </div>
+          <button class="addbtn" onclick="addNVDia()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Agregar día al itinerario</button>
+          <div class="fa"><button class="btns" onclick="goNVT(4)">← Anterior</button><button class="btnp" id="nv-save-btn" onclick="createViaje()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Crear viaje</button></div>
+        </div>
+      </div>
+
+      <!-- NUEVO CLIENTE -->
+      <div id="p-ncli" class="page">
+        <div class="ph"><div><div class="pt">Nuevo cliente</div></div><button class="btns" onclick="gp('cli')">← Volver</button></div>
+        <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Datos del cliente</div><div class="fg">
+          <div class="f"><label>Nombre completo</label><input type="text" id="nc-nombre" placeholder="María González"/></div>
+          <div class="f"><label>Email</label><input type="email" id="nc-email" placeholder="maria@email.com"/></div>
+          <div class="f"><label>Teléfono</label><input type="text" id="nc-tel" placeholder="+54 9 261 000 0000"/></div>
+          <div class="f"><label>Documento</label><input type="text" id="nc-doc" placeholder="DNI / Pasaporte"/></div>
+        </div></div>
+        <div class="fa"><button class="btns" onclick="gp('cli')">Cancelar</button><button class="btnp" onclick="createCliente()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Guardar cliente</button></div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div id="p-cli" class="page">
+        <div class="ph"><div><div class="pt">Clientes</div><div class="ps" id="cli-sub">Cargando...</div></div><button class="btnp" onclick="gp('ncli')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Nuevo cliente</button></div>
+        <div id="cli-list"><div class="loading"></div></div>
+      </div>
+
+      <!-- PRESUPUESTOS -->
+      <div id="p-pres" class="page">
+        <div class="ph"><div><div class="pt">Presupuestos</div><div class="ps" id="pres-sub">Cargando...</div></div><button class="btnp" onclick="gp('np')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Nuevo</button></div>
+        <div class="pipeline">
+          <div class="pp"><div class="ppn" id="pp-sol">0</div><div class="ppl">Solicitado</div></div>
+          <div class="pp"><div class="ppn" id="pp-cre">0</div><div class="ppl">Creado</div></div>
+          <div class="pp"><div class="ppn" id="pp-env">0</div><div class="ppl">Enviado</div></div>
+          <div class="pp"><div class="ppn" id="pp-mod">0</div><div class="ppl">Modificado</div></div>
+          <div class="pp hi"><div class="ppn" id="pp-con">0</div><div class="ppl">Confirmado</div></div>
+          <div class="pp"><div class="ppn" id="pp-via">0</div><div class="ppl">Viaje creado</div></div>
+        </div>
+        <div id="pres-list"><div class="loading"></div></div>
+      </div>
+
+      <!-- NUEVO PRESUPUESTO -->
+      <div id="p-np" class="page">
+        <div class="ph"><div><div class="pt">Nuevo presupuesto</div></div><button class="btns" onclick="gp('pres')">← Volver</button></div>
+        <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Cliente y destino</div><div class="fg">
+          <div class="f"><label>Cliente</label><select id="np-cli"><option value="">— Seleccionar —</option></select></div>
+          <div class="f"><label>Destino</label><input type="text" id="np-destino" placeholder="Europa del Este"/></div>
+          <div class="f"><label>Fecha inicio</label><input type="date" id="np-inicio"/></div>
+          <div class="f"><label>Fecha fin</label><input type="date" id="np-fin"/></div>
+          <div class="f"><label>Noches</label><input type="number" id="np-noches" placeholder="14" min="1"/></div>
+          <div class="f"><label>Pasajeros</label><input type="number" id="np-pax" value="2" min="1" oninput="npCalc()"/></div>
+          <div class="f"><label>Agente</label><input type="text" id="np-agente" placeholder="Bruno Raina"/></div>
+          <div class="f"><label>Estado</label><select id="np-estado"><option>Creado</option><option>Enviado</option><option>Solicitado</option></select></div>
+          <div class="f"><label>Validez</label><input type="date" id="np-validez"/></div>
+        </div></div>
+        <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>Vuelos incluidos</div>
+          <div id="np-vlist"></div>
+          <div class="np-addrow"><input id="np-vruta" placeholder="EZE → BUD (AR 141)"/><input id="np-vaero" placeholder="Aerolíneas Argentinas"/><button class="np-addbtn" onclick="npAddV()">+ Agregar</button></div>
+        </div>
+        <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Hoteles incluidos</div>
+          <div id="np-hlist"></div>
+          <div class="np-addrow"><input id="np-hnombre" placeholder="Corinthia Hotel ★★★★★"/><input id="np-hciudad" placeholder="Budapest · 2 noches"/><button class="np-addbtn" onclick="npAddH()">+ Agregar</button></div>
+        </div>
+        <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Actividades incluidas</div>
+          <div id="np-alist"></div>
+          <div class="np-addrow"><input id="np-anombre" placeholder="Excursión Budapest día completo"/><input id="np-adet" placeholder="Día 2 · 09:00 – 22:00"/><button class="np-addbtn" onclick="npAddA()">+ Agregar</button></div>
+        </div>
+        <div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Desglose de precios</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 32px;gap:8px;margin-bottom:8px;"><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;">Concepto</div><div style="font-size:9px;font-weight:700;color:var(--mu);text-transform:uppercase;">Precio / pax</div><div></div></div>
+          <div id="np-desrows">
+            <div class="desrow"><input placeholder="Vuelos internacionales (ida y vuelta)" value="Vuelos internacionales (ida y vuelta)"/><input placeholder="USD 0" oninput="npCalc()"/><button onclick="this.closest('.desrow').remove()">×</button></div>
+            <div class="desrow"><input placeholder="Hoteles — noches (hab. doble)" value="Hoteles — noches (hab. doble)"/><input placeholder="USD 0" oninput="npCalc()"/><button onclick="this.closest('.desrow').remove()">×</button></div>
+            <div class="desrow"><input placeholder="Actividades y excursiones" value="Actividades y excursiones"/><input placeholder="USD 0" oninput="npCalc()"/><button onclick="this.closest('.desrow').remove()">×</button></div>
+            <div class="desrow"><input placeholder="Traslados incluidos" value="Traslados incluidos"/><input placeholder="USD 0" oninput="npCalc()"/><button onclick="this.closest('.desrow').remove()">×</button></div>
+            <div class="desrow"><input placeholder="Seguro de viaje" value="Seguro de viaje"/><input placeholder="USD 0" oninput="npCalc()"/><button onclick="this.closest('.desrow').remove()">×</button></div>
+          </div>
+          <button onclick="npAddDes()" style="width:100%;padding:10px;border:1.5px dashed rgba(13,31,117,.2);border-radius:12px;background:none;cursor:pointer;font-size:12px;font-weight:600;color:var(--b);font-family:'Raleway',sans-serif;margin-top:4px;">+ Agregar concepto</button>
+          <div style="border-top:1px solid var(--br);padding-top:13px;margin-top:13px;">
+            <div class="fg" style="margin-bottom:12px;"><div class="f"><label>Precio por persona</label><input type="text" id="np-ppax" placeholder="USD 5.615" oninput="npCalc()"/></div><div class="f"><label>Pasajeros</label><input type="number" id="np-pax2" value="2" min="1" oninput="npCalc()"/></div></div>
+            <div class="total-box"><div><div class="total-lbl">PRECIO TOTAL</div><div class="total-pax" id="np-paxlbl">2 personas</div></div><div class="total-num" id="np-totdisp">—</div></div>
+          </div>
+          <div class="f" style="margin-top:13px;"><label>Condiciones</label><textarea id="np-cond" style="padding:9px 11px;font-size:12px;font-family:'Raleway',sans-serif;border-radius:10px;border:1px solid var(--br);background:var(--bg);color:var(--n);resize:vertical;min-height:70px;width:100%;">Presupuesto sujeto a disponibilidad. Para confirmar se requiere el 30% de seña. Consultar política de cancelación.</textarea></div>
+        </div>
+        <div class="fa"><button class="btns" onclick="gp('pres')">Cancelar</button><button class="btnp" id="np-save-btn" onclick="savePresupuesto()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Guardar presupuesto</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- COPY MODAL -->
+<div class="moverlay" id="copy-modal">
+  <div class="modal">
+    <div class="mt">Copiar viaje</div>
+    <div class="ms" id="copy-sub">Duplicá el viaje para otro pasajero.</div>
+    <div class="cinc"><div class="cinct">Se copia automáticamente:</div>
+      <div class="ci"><div class="cichk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Vuelos, hoteles, actividades e itinerario</div>
+      <div class="ci"><div class="cichk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>Tips del agente y guías de ciudad</div>
+    </div>
+    <div class="mf"><label>Nuevo nombre del viaje</label><input id="copy-nombre" placeholder="Europa del Este — Ana López"/></div>
+    <div class="mf"><label>Email del nuevo pasajero</label><input id="copy-email" placeholder="nuevo@email.com"/></div>
+    <div class="m2"><div class="mf"><label>Nueva fecha inicio</label><input type="date" id="copy-inicio"/></div><div class="mf"><label>Nueva fecha fin</label><input type="date" id="copy-fin"/></div></div>
+    <div class="ma"><button class="btns" onclick="closeCopy()">Cancelar</button><button class="btnp" onclick="doCopy()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar viaje</button></div>
+  </div>
+</div>
+
+<div class="toast-el" id="toast-el"></div>
+
+<script>
+
+// SUPABASE
+var sb = null;
+(function() {
+  try {
+    var _sb = window.supabase || (window.supabase = {});
+    if (typeof _sb.createClient === 'function') {
+      sb = _sb.createClient('https://vzgcogivfnlzciwwscls.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6Z2NvZ2l2Zm5semNpd3dzY2xzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODYwMTAsImV4cCI6MjA4OTI2MjAxMH0.tPqXzg44_xG6uogi8lmRIWLfLUB21pSokivL6XIL9_M');
+    }
+  } catch(e) { console.warn('SB init error', e); }
+})();
+
+// STATE
+var allViajes = [], allClientes = [], allPres = [];
+var editId = null, copyId = null;
+var nvVC = 1, nvHC = 1, nvAC = 1, nvIC = 1;
+var npV = [], npH = [], npA = [];
+
+// UTILS
+var COLORS = ['#0D1F75','#3A46A0','#FF7D87','#1B5E20','#7A3800','#5B0DA0'];
+function gc(s) { return COLORS[s ? s.charCodeAt(0) % COLORS.length : 0]; }
+function gi(n) { if(!n) return '?'; return n.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2); }
+function fd(d) { if(!d) return '—'; return new Date(d+'T00:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'}); }
+function getStatus(v) {
+  var t=new Date(), s=new Date(v.fecha_inicio), e=new Date(v.fecha_fin);
+  if(v.estado==='Finalizado' || e<t) return 'Finalizado';
+  if(s<=t && t<=e) return 'Activo';
+  return 'Proximo';
+}
+function getProgress(v) {
+  var t=new Date(), s=new Date(v.fecha_inicio), e=new Date(v.fecha_fin);
+  var total=Math.max(1,(e-s)/86400000);
+  var done=Math.max(0,Math.min(total,(t-s)/86400000));
+  return {pct:Math.round(done/total*100), day:Math.round(done)+1, total:Math.round(total)};
+}
+var statusCls = {Activo:'vs-ok',Proximo:'vs-up',Finalizado:'vs-pa'};
+var statusLbl = {Activo:'En curso',Proximo:'Próximo',Finalizado:'Finalizado'};
+var presCls = {Solicitado:'s-sol',Creado:'s-cre',Enviado:'s-env',Modificado:'s-mod',Confirmado:'s-con','Viaje creado':'s-via'};
+
+function toast(msg) {
+  var t = document.getElementById('toast-el');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(function(){ t.style.display='none'; }, 2800);
+}
+
+// LOGIN
+function doLogin() {
+  var email = document.getElementById('login-email').value.trim();
+  var pass = document.getElementById('login-pass').value;
+  if (!email || !pass) {
+    var e = document.getElementById('login-err');
+    e.textContent = 'Completá email y contraseña';
+    e.style.display = 'block';
+    setTimeout(function(){ e.style.display='none'; }, 3000);
+    return;
+  }
+  var name = email.split('@')[0];
+  var nameDisplay = name.charAt(0).toUpperCase() + name.slice(1);
+  document.getElementById('agent-name').textContent = nameDisplay;
+  document.getElementById('agent-dot').textContent = gi(name);
+  var h = new Date().getHours();
+  var gr = h<12 ? 'Buenos días' : h<18 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('dash-greet').textContent = gr + ', ' + nameDisplay;
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  loadAll();
+}
+document.addEventListener('keydown', function(ev) {
+  if (ev.key === 'Enter') {
+    var ls = document.getElementById('login-screen');
+    if (ls && ls.style.display !== 'none') doLogin();
+  }
+});
+function doLogout() {
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+// NAVIGATION
+function gp(p) {
+  var pages = document.querySelectorAll('.page');
+  for(var i=0;i<pages.length;i++) pages[i].classList.remove('on');
+  var sbis = document.querySelectorAll('.sbi');
+  for(var i=0;i<sbis.length;i++) sbis[i].classList.remove('on');
+  var pg = document.getElementById('p-'+p);
+  if(pg) pg.classList.add('on');
+  var sbi = document.getElementById('sbi-'+p);
+  if(sbi) sbi.classList.add('on');
+  if(p==='viajes') renderViajes('todos');
+  if(p==='cli') renderClientes();
+  if(p==='pres') { renderPres(); updatePipeline(); }
+  if(p==='nv') { fillCliSel(); goNVT(1); }
+  if(p==='np') { npOpen(); }
+}
+
+// LOAD DATA
+async function loadAll() {
+  await Promise.all([loadViajes(), loadClientes(), loadPres()]);
+  renderDash();
+}
+async function loadViajes() {
+  if(!sb){ document.getElementById('cnt-viajes').textContent='0'; return; }
+  var res = await sb.from('viajes').select('*,clientes(nombre,email)').order('fecha_inicio',{ascending:false});
+  allViajes = (res.data || []).map(function(v){ v._st = getStatus(v); return v; });
+  document.getElementById('cnt-viajes').textContent = allViajes.length;
+  document.getElementById('viajes-sub').textContent = allViajes.length + ' viajes';
+  renderViajes('todos');
+  fillCliSel();
+}
+async function loadClientes() {
+  if(!sb){ document.getElementById('cnt-cli').textContent='0'; return; }
+  var res = await sb.from('clientes').select('*').order('nombre');
+  allClientes = res.data || [];
+  document.getElementById('cnt-cli').textContent = allClientes.length;
+  document.getElementById('cli-sub').textContent = allClientes.length + ' clientes';
+  renderClientes();
+}
+async function loadPres() {
+  if(!sb){ document.getElementById('cnt-pres').textContent='0'; return; }
+  var res = await sb.from('presupuestos').select('*,clientes(nombre)').order('created_at',{ascending:false});
+  allPres = res.data || [];
+  document.getElementById('cnt-pres').textContent = allPres.length;
+  document.getElementById('pres-sub').textContent = allPres.length + ' presupuestos';
+  renderPres();
+  updatePipeline();
+}
+
+// DASHBOARD
+function renderDash() {
+  var activos = allViajes.filter(function(v){ return v._st==='Activo'; });
+  var proximos = allViajes.filter(function(v){
+    var d=new Date(v.fecha_inicio),t=new Date(),t30=new Date();
+    t30.setDate(t.getDate()+30);
+    return d>=t && d<=t30;
+  });
+  document.getElementById('st-activos').textContent = activos.length;
+  document.getElementById('st-proximos').textContent = proximos.length;
+  document.getElementById('st-clientes').textContent = allClientes.length;
+  document.getElementById('st-pres').textContent = allPres.filter(function(p){ return p.estado!=='Viaje creado'; }).length;
+  var html = '';
+  if(activos.length) { html += '<div class="sd">Viajes activos hoy</div>' + activos.map(vRow).join(''); }
+  var pend = allPres.filter(function(p){ return ['Enviado','Creado','Solicitado'].includes(p.estado); }).slice(0,2);
+  if(pend.length) { html += '<div class="sd">Presupuestos pendientes</div>' + pend.map(pCard).join(''); }
+  if(!html) html = '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg><p>No hay viajes activos.<br>¡Creá el primero!</p></div>';
+  document.getElementById('dash-content').innerHTML = html;
+}
+
+// VIAJES
+function vRow(v) {
+  var cn = v.clientes && v.clientes.nombre ? v.clientes.nombre : 'Cliente';
+  var prog = getProgress(v);
+  var st = v._st;
+  var pct = st==='Finalizado' ? 100 : prog.pct;
+  var pfill = st==='Finalizado' ? 'width:100%;background:var(--mu);' : 'width:'+pct+'%;';
+  var plbl = st==='Activo' ? 'Día '+prog.day+'/'+prog.total : st==='Proximo' ? 'Próximo' : 'Finalizado';
+  return '<div class="vrow">'
+    +'<div class="av" style="background:'+gc(cn)+';">'+gi(cn)+'</div>'
+    +'<div class="vi"><div class="vn">'+cn+'</div><div class="vd">'+(v.destino||'—')+'</div><div class="vt">'+fd(v.fecha_inicio)+' – '+fd(v.fecha_fin)+'</div></div>'
+    +'<div class="vpw"><div class="vpl">'+plbl+'</div><div class="vp"><div class="vpf" style="'+pfill+'"></div></div></div>'
+    +'<span class="vstatus '+(statusCls[st]||'vs-pa')+'">'+(statusLbl[st]||st)+'</span>'
+    +'<div class="vacts">'
+    +'<button class="iab edit-ab" onclick="openEdit(''+v.id+'')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+    +'<button class="iab copy-ab" onclick="openCopy(''+v.id+'',''+cn.replace(/'/g,'').replace(/"/g,'')+'',''+(v.destino||'').replace(/'/g,'').replace(/"/g,'')+'' )" title="Copiar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>'
+    +'</div></div>';
+}
+function renderViajes(filtro) {
+  var list = filtro==='todos' ? allViajes : allViajes.filter(function(v){ return v._st===filtro; });
+  var el = document.getElementById('viajes-list');
+  if(!list.length){ el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg><p>No hay viajes aquí.</p></div>'; return; }
+  var grp = {Activo:[],Proximo:[],Finalizado:[]};
+  list.forEach(function(v){ if(grp[v._st]) grp[v._st].push(v); });
+  var html = '';
+  if(grp.Activo.length) html += '<div class="sd">En curso</div>' + grp.Activo.map(vRow).join('');
+  if(grp.Proximo.length) html += '<div class="sd">Próximos</div>' + grp.Proximo.map(vRow).join('');
+  if(grp.Finalizado.length) html += '<div class="sd" style="opacity:.6;">Finalizados</div>' + grp.Finalizado.map(function(v){ return '<div style="opacity:.55;">'+vRow(v)+'</div>'; }).join('');
+  el.innerHTML = html;
+}
+function filtV(btn, filtro) {
+  var tabs = document.querySelectorAll('.ftab');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.remove('on');
+  btn.classList.add('on');
+  renderViajes(filtro);
+}
+
+// EDIT VIAJE
+async function openEdit(id) {
+  if(!sb) return;
+  editId = id;
+  var v = allViajes.find(function(x){ return x.id===id; });
+  if(!v) return;
+  var cn = v.clientes && v.clientes.nombre ? v.clientes.nombre : 'Cliente';
+  var prog = getProgress(v);
+  document.getElementById('edit-sub').textContent = cn + ' — ' + (v.destino||'');
+  document.getElementById('edit-hdr').innerHTML =
+    '<div class="edit-av" style="background:'+gc(cn)+';">'+gi(cn)+'</div>'
+    +'<div class="edit-inf"><div class="edit-name">'+cn+'</div><div class="edit-dest">'+(v.destino||'—')+'</div><div class="edit-dates">'+fd(v.fecha_inicio)+' – '+fd(v.fecha_fin)+'</div></div>'
+    +'<div style="text-align:right;"><div class="edit-pct">'+prog.pct+'%</div><div class="edit-plbl">Día '+prog.day+' de '+prog.total+'</div><div class="edit-pbar"><div class="edit-pfill" style="width:'+prog.pct+'%"></div></div></div>'
+    +'<span class="edit-tag">'+(statusLbl[v._st]||v._st)+'</span>';
+  
+  // Tab 1: General
+  document.getElementById('et-1').innerHTML =
+    '<div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Datos del cliente</div>'
+    +'<div class="fg"><div class="f"><label>Nombre</label><input id="ev-nombre" value="'+cn+'"/></div>'
+    +'<div class="f"><label>Email</label><input id="ev-email" value="'+(v.clientes&&v.clientes.email?v.clientes.email:'')+'"/></div></div></div>'
+    +'<div class="fcard"><div class="fct"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>Datos del viaje</div>'
+    +'<div class="fg"><div class="f full"><label>Destino</label><input id="ev-destino" value="'+(v.destino||'')+'"/></div>'
+    +'<div class="f"><label>Fecha inicio</label><input type="date" id="ev-inicio" value="'+(v.fecha_inicio||'')+'"/></div>'
+    +'<div class="f"><label>Fecha fin</label><input type="date" id="ev-fin" value="'+(v.fecha_fin||'')+'"/></div>'
+    +'<div class="f"><label>Estado</label><select id="ev-estado"><option'+(v._st==='Activo'?' selected':'')+'>Activo</option><option'+(v._st==='Proximo'?' selected':'')+'>Proximo</option><option'+(v._st==='Finalizado'?' selected':'')+'>Finalizado</option></select></div>'
+    +'<div class="f"><label>Agente</label><input id="ev-agente" value="'+(v.agente||'')+'"/></div>'
+    +'<div class="f full"><label>Descripción</label><textarea id="ev-desc">'+(v.descripcion||'')+'</textarea></div>'
+    +'</div></div><div class="fa"><button class="btnp" onclick="saveViaje()">Guardar cambios</button></div>';
+  
+  // Load sub-data
+  var results = await Promise.all([
+    sb.from('vuelos').select('*').eq('viaje_id',id),
+    sb.from('hoteles').select('*').eq('viaje_id',id),
+    sb.from('actividades').select('*').eq('viaje_id',id).order('dia'),
+    sb.from('itinerario').select('*').eq('viaje_id',id).order('dia'),
+  ]);
+  var vls=results[0].data||[], hts=results[1].data||[], acs=results[2].data||[], itn=results[3].data||[];
+
+  // Tab 2: Vuelos
+  var vhtml = vls.map(function(f,i){
+    return '<div class="iblock" id="evv-'+i+'">'
+      +'<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8"/></svg>Vuelo '+(i+1)+' — '+(f.origen||'?')+' → '+(f.destino||'?')+'</div>'
+      +'<button class="ibrm" onclick="delVuelo(''+f.id+'','evv-'+i+'')">Eliminar</button></div>'
+      +'<div class="ibb"><div class="fg3" style="margin-bottom:10px;">'
+      +'<div class="f"><label>Aerolínea</label><input class="ev-aerolinea" value="'+(f.aerolinea||'')+'"/></div>'
+      +'<div class="f"><label>Nro. vuelo</label><input class="ev-nrovuelo" value="'+(f.nro_vuelo||'')+'"/></div>'
+      +'<div class="f"><label>Estado</label><select class="ev-vest"><option'+(f.estado==='Confirmado'?' selected':'')+'>Confirmado</option><option'+(f.estado==='Por confirmar'?' selected':'')+'>Por confirmar</option></select></div>'
+      +'<div class="f"><label>Origen</label><input class="ev-origen" value="'+(f.origen||'')+'"/></div>'
+      +'<div class="f"><label>Destino</label><input class="ev-vdest" value="'+(f.destino||'')+'"/></div>'
+      +'<div class="f"><label>Duración</label><input class="ev-dur" value="'+(f.duracion||'')+'"/></div>'
+      +'<div class="f"><label>Salida</label><input type="datetime-local" class="ev-salida" value="'+(f.fecha_salida?f.fecha_salida.slice(0,16):'')+'"/></div>'
+      +'<div class="f"><label>Llegada</label><input class="ev-llegada" value="'+(f.fecha_llegada||'')+'"/></div>'
+      +'<div class="f"><label>Asiento</label><input class="ev-asiento" value="'+(f.asiento||'')+'"/></div>'
+      +'<div class="f full"><label>Link check-in</label><input type="url" class="ev-checkin" value="'+(f.link_checkin||'')+'"/></div>'
+      +'</div><div class="divider"></div>'
+      +'<div class="du"><div class="dut">Documentos del vuelo</div>'
+      +'<button class="uzzone" onclick="trig('evvinp-'+i+'')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="uzt">Subir boarding pass</div><div class="uzs">PDF, JPG, PNG</div></button>'
+      +'<input type="file" id="evvinp-'+i+'" accept=".pdf,.jpg,.png" onchange="addDoc('evvdocs-'+i+'',this,'Boarding pass')">'
+      +'</div></div></div>';
+  }).join('');
+  vhtml += '<button class="addbtn" onclick="toast('Guardá el viaje y volvé a editar para agregar vuelos')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar vuelo</button>';
+  vhtml += '<div class="fa"><button class="btnp" onclick="saveViaje()">Guardar cambios</button></div>';
+  document.getElementById('et-2').innerHTML = vhtml;
+
+  // Tab 3: Hoteles
+  var hhtml = hts.map(function(h,i){
+    var cats = [5,4,3,2].map(function(n){ return '<option'+(h.categoria==n?' selected':'')+'>'+n+'</option>'; }).join('');
+    return '<div class="iblock" id="evh-'+i+'">'
+      +'<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Hotel '+(i+1)+' — '+(h.nombre||'—')+'</div>'
+      +'<button class="ibrm" onclick="delHotel(''+h.id+'','evh-'+i+'')">Eliminar</button></div>'
+      +'<div class="ibb"><div class="fg" style="margin-bottom:10px;">'
+      +'<div class="f full"><label>Nombre</label><input class="ev-hnombre" value="'+(h.nombre||'')+'"/></div>'
+      +'<div class="f"><label>Ciudad</label><input class="ev-hciudad" value="'+(h.ciudad||'')+'"/></div>'
+      +'<div class="f"><label>Categoría</label><select class="ev-hcat">'+cats+'</select></div>'
+      +'<div class="f"><label>Check-in</label><input type="date" class="ev-hcheckin" value="'+(h.checkin||'')+'"/></div>'
+      +'<div class="f"><label>Check-out</label><input type="date" class="ev-hcheckout" value="'+(h.checkout||'')+'"/></div>'
+      +'<div class="f"><label>Habitación</label><input class="ev-hhab" value="'+(h.habitacion||'')+'"/></div>'
+      +'<div class="f"><label>Nro. reserva</label><input class="ev-hreserva" value="'+(h.nro_reserva||'')+'"/></div>'
+      +'<div class="f"><label>Desayuno</label><select class="ev-hdesayuno"><option'+(h.desayuno==='Incluido'?' selected':'')+'>Incluido</option><option'+(h.desayuno==='No incluido'?' selected':'')+'>No incluido</option></select></div>'
+      +'</div><div class="divider"></div>'
+      +'<div class="du"><div class="dut">Documentos</div>'
+      +'<button class="uzzone" onclick="trig('evhinp-'+i+'')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="uzt">Subir confirmación</div><div class="uzs">PDF, JPG, PNG</div></button>'
+      +'<input type="file" id="evhinp-'+i+'" accept=".pdf,.jpg,.png" onchange="addDoc('evhdocs-'+i+'',this,'Reserva')">'
+      +'</div></div></div>';
+  }).join('');
+  hhtml += '<button class="addbtn" onclick="toast('Guardá el viaje y volvé a editar para agregar hoteles')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar hotel</button>';
+  hhtml += '<div class="fa"><button class="btnp" onclick="saveViaje()">Guardar cambios</button></div>';
+  document.getElementById('et-3').innerHTML = hhtml;
+
+  // Tab 4: Actividades
+  var ahtml = acs.map(function(a,i){
+    var tipos = ['Excursión','Traslado','Cena incluida','Show','Libre'].map(function(t){ return '<option'+(a.tipo===t?' selected':'')+'>'+t+'</option>'; }).join('');
+    return '<div class="iblock" id="eva-'+i+'">'
+      +'<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Día '+(a.dia||'?')+' — '+(a.nombre||'—')+'</div>'
+      +'<button class="ibrm" onclick="delAct(''+a.id+'','eva-'+i+'')">Eliminar</button></div>'
+      +'<div class="ibb"><div class="fg">'
+      +'<div class="f"><label>Tipo</label><select class="ev-atipo">'+tipos+'</select></div>'
+      +'<div class="f"><label>Nombre</label><input class="ev-anombre" value="'+(a.nombre||'')+'"/></div>'
+      +'<div class="f"><label>Ciudad</label><input class="ev-aciudad" value="'+(a.ciudad||'')+'"/></div>'
+      +'<div class="f"><label>Día</label><input type="number" class="ev-adia" value="'+(a.dia||1)+'" min="1"/></div>'
+      +'<div class="f"><label>Horario</label><input class="ev-ahorario" value="'+(a.horario||'')+'"/></div>'
+      +'<div class="f"><label>Estado</label><select class="ev-aestado"><option'+(a.estado==='Confirmada'?' selected':'')+'>Confirmada</option><option'+(a.estado==='Por confirmar'?' selected':'')+'>Por confirmar</option></select></div>'
+      +'<div class="f full"><label>Descripción</label><textarea class="ev-adesc">'+(a.descripcion||'')+'</textarea></div>'
+      +'<div class="f full"><label>Tip del agente</label><textarea class="ev-atip">'+(a.tip||'')+'</textarea></div>'
+      +'</div><div class="divider"></div>'
+      +'<div class="du"><div class="dut">Documentos</div>'
+      +'<button class="uzzone" onclick="trig('evainp-'+i+'')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><div class="uzt">Subir voucher</div><div class="uzs">PDF, JPG, PNG</div></button>'
+      +'<input type="file" id="evainp-'+i+'" accept=".pdf,.jpg,.png" onchange="addDoc('evadocs-'+i+'',this,'Voucher')">'
+      +'</div></div></div>';
+  }).join('');
+  ahtml += '<button class="addbtn" onclick="toast('Guardá el viaje y volvé a editar para agregar actividades')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar actividad</button>';
+  ahtml += '<div class="fa"><button class="btnp" onclick="saveViaje()">Guardar cambios</button></div>';
+  document.getElementById('et-4').innerHTML = ahtml;
+
+  // Tab 5: Itinerario
+  var today = new Date();
+  var ihtml = itn.map(function(d){
+    var ddate = new Date(v.fecha_inicio);
+    ddate.setDate(ddate.getDate()+(d.dia-1));
+    var isPast = ddate < today && ddate.toDateString() !== today.toDateString();
+    var isToday = ddate.toDateString() === today.toDateString();
+    var cls = isPast ? 'past' : isToday ? 'today' : '';
+    var dayStyle = isToday ? ' class="itin-day today"' : ' class="itin-day"';
+    return '<div'+dayStyle+'>'
+      +'<div class="daynum '+cls+'">'+d.dia+'</div>'
+      +'<div class="dayinfo">'
+      +'<div class="daytitle'+(isToday?' today':'')+'">'+(d.titulo||'—')+(isToday?' ← HOY':'')+'</div>'
+      +'<div class="daycity">'+(d.ciudad||'—')+'</div>'
+      +'<div class="daydesc">'+(d.descripcion||'')+'</div>'
+      +'</div>'
+      +'<button class="dayedit" onclick="editDia(''+d.id+'')"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+      +'</div>';
+  }).join('');
+  ihtml += '<div class="fa"><button class="btnp" onclick="saveViaje()">Guardar cambios</button></div>';
+  document.getElementById('et-5').innerHTML = ihtml;
+
+  goET(1);
+  gp('edit');
+}
+
+function goET(n) {
+  for(var i=1;i<=5;i++){
+    document.getElementById('et-'+i).style.display = i===n ? 'block' : 'none';
+    document.getElementById('eth-'+i).classList.toggle('on', i===n);
+  }
+}
+
+async function saveViaje() {
+  if(!editId||!sb) return;
+  var destino = document.getElementById('ev-destino') ? document.getElementById('ev-destino').value.trim() : '';
+  if(!destino){ toast('Completá el destino'); return; }
+  await sb.from('viajes').update({
+    destino: destino,
+    fecha_inicio: document.getElementById('ev-inicio') ? document.getElementById('ev-inicio').value || null : null,
+    fecha_fin: document.getElementById('ev-fin') ? document.getElementById('ev-fin').value || null : null,
+    estado: document.getElementById('ev-estado') ? document.getElementById('ev-estado').value : null,
+    agente: document.getElementById('ev-agente') ? document.getElementById('ev-agente').value : null,
+    descripcion: document.getElementById('ev-desc') ? document.getElementById('ev-desc').value : null,
+  }).eq('id', editId);
+  toast('Cambios guardados ✓');
+  await loadViajes();
+}
+
+async function deleteViaje() {
+  if(!editId||!sb||!confirm('¿Eliminar este viaje?')) return;
+  await sb.from('itinerario').delete().eq('viaje_id',editId);
+  await sb.from('actividades').delete().eq('viaje_id',editId);
+  await sb.from('hoteles').delete().eq('viaje_id',editId);
+  await sb.from('vuelos').delete().eq('viaje_id',editId);
+  await sb.from('viajes').delete().eq('id',editId);
+  toast('Viaje eliminado ✓');
+  editId=null;
+  await loadAll();
+  gp('viajes');
+}
+async function delVuelo(id,elId){ if(!sb) return; await sb.from('vuelos').delete().eq('id',id); document.getElementById(elId).remove(); toast('Vuelo eliminado'); }
+async function delHotel(id,elId){ if(!sb) return; await sb.from('hoteles').delete().eq('id',id); document.getElementById(elId).remove(); toast('Hotel eliminado'); }
+async function delAct(id,elId){ if(!sb) return; await sb.from('actividades').delete().eq('id',id); document.getElementById(elId).remove(); toast('Actividad eliminada'); }
+async function editDia(id) {
+  var t = prompt('Título del día:'); if(t===null) return;
+  var c = prompt('Ciudad:'); if(c===null) return;
+  if(!sb) return;
+  await sb.from('itinerario').update({titulo:t,ciudad:c}).eq('id',id);
+  toast('Día actualizado ✓');
+  openEdit(editId);
+}
+
+// NUEVO VIAJE
+function goNVT(n) {
+  for(var i=1;i<=5;i++){
+    document.getElementById('nvtab-'+i).style.display = i===n ? 'block' : 'none';
+    document.getElementById('nvt-'+i).classList.toggle('on', i===n);
+  }
+}
+function fillCliSel() {
+  var sel = document.getElementById('nv-clisel');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">— Nuevo cliente —</option>';
+  allClientes.forEach(function(c){ sel.innerHTML += '<option value="'+c.id+'">'+c.nombre+' ('+c.email+')</option>'; });
+}
+function autoFillCli() {
+  var id = document.getElementById('nv-clisel').value;
+  var c = allClientes.find(function(x){ return x.id===id; });
+  if(c){ document.getElementById('nv-nombre').value=c.nombre; document.getElementById('nv-email').value=c.email; document.getElementById('nv-tel').value=c.telefono||''; }
+}
+function addNVVuelo() {
+  nvVC++;
+  var d = document.createElement('div');
+  d.className = 'iblock'; d.id = 'nvv-'+nvVC;
+  d.innerHTML = '<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8"/></svg>Vuelo '+nvVC+'</div><button class="ibrm" onclick="this.closest('.iblock').remove()">Eliminar</button></div>'
+    +'<div class="ibb"><div class="fg3"><div class="f"><label>Aerolínea</label><input class="nv-aerolinea"/></div><div class="f"><label>Nro. vuelo</label><input class="nv-nrovuelo"/></div><div class="f"><label>Estado</label><select class="nv-vest"><option>Confirmado</option><option>Por confirmar</option></select></div><div class="f"><label>Origen</label><input class="nv-origen"/></div><div class="f"><label>Destino</label><input class="nv-vdestino"/></div><div class="f"><label>Duración</label><input class="nv-duracion"/></div><div class="f"><label>Salida</label><input type="datetime-local" class="nv-salida"/></div><div class="f"><label>Llegada</label><input class="nv-llegada"/></div><div class="f"><label>Asiento</label><input class="nv-asiento"/></div><div class="f full"><label>Link check-in</label><input type="url" class="nv-checkin"/></div></div></div></div>';
+  document.getElementById('nv-vuelos-cont').appendChild(d);
+}
+function addNVHotel() {
+  nvHC++;
+  var d = document.createElement('div');
+  d.className = 'iblock';
+  d.innerHTML = '<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Hotel '+nvHC+'</div><button class="ibrm" onclick="this.closest('.iblock').remove()">Eliminar</button></div>'
+    +'<div class="ibb"><div class="fg"><div class="f full"><label>Nombre</label><input class="nv-hnombre"/></div><div class="f"><label>Ciudad</label><input class="nv-hciudad"/></div><div class="f"><label>Cat.</label><select class="nv-hcat"><option>5</option><option>4</option><option>3</option></select></div><div class="f"><label>Check-in</label><input type="date" class="nv-hcheckin"/></div><div class="f"><label>Check-out</label><input type="date" class="nv-hcheckout"/></div><div class="f"><label>Habitación</label><input class="nv-hhab"/></div><div class="f"><label>Reserva</label><input class="nv-hreserva"/></div><div class="f"><label>Desayuno</label><select class="nv-hdesayuno"><option>Incluido</option><option>No incluido</option></select></div></div></div></div>';
+  document.getElementById('nv-hoteles-cont').appendChild(d);
+}
+function addNVAct() {
+  nvAC++;
+  var d = document.createElement('div');
+  d.className = 'iblock';
+  d.innerHTML = '<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Actividad '+nvAC+'</div><button class="ibrm" onclick="this.closest('.iblock').remove()">Eliminar</button></div>'
+    +'<div class="ibb"><div class="fg"><div class="f"><label>Tipo</label><select class="nv-atipo"><option>Excursión</option><option>Traslado</option><option>Cena incluida</option><option>Show</option></select></div><div class="f"><label>Nombre</label><input class="nv-anombre"/></div><div class="f"><label>Ciudad</label><input class="nv-aciudad"/></div><div class="f"><label>Día</label><input type="number" class="nv-adia" min="1"/></div><div class="f"><label>Horario</label><input class="nv-ahorario"/></div><div class="f"><label>Estado</label><select class="nv-aestado"><option>Confirmada</option><option>Por confirmar</option></select></div><div class="f full"><label>Descripción</label><textarea class="nv-adesc"></textarea></div><div class="f full"><label>Tip</label><textarea class="nv-atip"></textarea></div></div></div></div>';
+  document.getElementById('nv-acts-cont').appendChild(d);
+}
+function addNVDia() {
+  nvIC++;
+  var d = document.createElement('div');
+  d.className = 'iblock';
+  d.innerHTML = '<div class="ibh"><div class="ibl"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Día '+nvIC+'</div><button class="ibrm" onclick="this.closest('.iblock').remove()">Eliminar</button></div>'
+    +'<div class="ibb"><div class="fg"><div class="f"><label>Título</label><input class="nv-itit"/></div><div class="f"><label>Ciudad</label><input class="nv-iciudad"/></div><div class="f full"><label>Descripción</label><textarea class="nv-idesc"></textarea></div><div class="f full"><label>Tip</label><textarea class="nv-itip"></textarea></div></div></div></div>';
+  document.getElementById('nv-itin-cont').appendChild(d);
+}
+
+async function createViaje() {
+  if(!sb){ toast('Sin conexión a base de datos'); return; }
+  var btn = document.getElementById('nv-save-btn');
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+  try {
+    var cliId = document.getElementById('nv-clisel').value;
+    if(!cliId) {
+      var nombre = document.getElementById('nv-nombre').value.trim();
+      var email = document.getElementById('nv-email').value.trim();
+      if(!nombre||!email){ toast('Completá nombre y email del cliente'); btn.textContent='Crear viaje'; btn.disabled=false; return; }
+      var cr = await sb.from('clientes').insert({nombre:nombre,email:email,telefono:document.getElementById('nv-tel').value}).select().single();
+      cliId = cr.data.id;
+    }
+    var destino = document.getElementById('nv-destino').value.trim();
+    if(!destino){ toast('Completá el nombre del viaje'); btn.textContent='Crear viaje'; btn.disabled=false; return; }
+    var vr = await sb.from('viajes').insert({cliente_id:cliId,destino:destino,fecha_inicio:document.getElementById('nv-inicio').value||null,fecha_fin:document.getElementById('nv-fin').value||null,estado:document.getElementById('nv-estado').value,agente:document.getElementById('nv-agente').value,descripcion:document.getElementById('nv-desc').value}).select().single();
+    var vid = vr.data.id;
+    var vblocks = document.querySelectorAll('#nv-vuelos-cont .iblock');
+    for(var i=0;i<vblocks.length;i++){
+      var b=vblocks[i], a=b.querySelector('.nv-aerolinea').value;
+      if(a) await sb.from('vuelos').insert({viaje_id:vid,aerolinea:a,nro_vuelo:b.querySelector('.nv-nrovuelo').value,origen:b.querySelector('.nv-origen').value,destino:b.querySelector('.nv-vdestino').value,duracion:b.querySelector('.nv-duracion').value,fecha_salida:b.querySelector('.nv-salida').value||null,fecha_llegada:b.querySelector('.nv-llegada').value,asiento:b.querySelector('.nv-asiento').value,link_checkin:b.querySelector('.nv-checkin').value,estado:b.querySelector('.nv-vest').value});
+    }
+    var hblocks = document.querySelectorAll('#nv-hoteles-cont .iblock');
+    for(var i=0;i<hblocks.length;i++){
+      var b=hblocks[i], n=b.querySelector('.nv-hnombre').value;
+      if(n) await sb.from('hoteles').insert({viaje_id:vid,nombre:n,ciudad:b.querySelector('.nv-hciudad').value,categoria:parseInt(b.querySelector('.nv-hcat').value||5),checkin:b.querySelector('.nv-hcheckin').value||null,checkout:b.querySelector('.nv-hcheckout').value||null,habitacion:b.querySelector('.nv-hhab').value,nro_reserva:b.querySelector('.nv-hreserva').value,desayuno:b.querySelector('.nv-hdesayuno').value,estado:'Confirmado'});
+    }
+    var ablocks = document.querySelectorAll('#nv-acts-cont .iblock');
+    for(var i=0;i<ablocks.length;i++){
+      var b=ablocks[i], n=b.querySelector('.nv-anombre').value;
+      if(n) await sb.from('actividades').insert({viaje_id:vid,nombre:n,tipo:b.querySelector('.nv-atipo').value,ciudad:b.querySelector('.nv-aciudad').value,dia:parseInt(b.querySelector('.nv-adia').value||1),horario:b.querySelector('.nv-ahorario').value,descripcion:b.querySelector('.nv-adesc').value,tip:b.querySelector('.nv-atip').value,estado:b.querySelector('.nv-aestado').value,incluido:'Incluido'});
+    }
+    var iblocks = document.querySelectorAll('#nv-itin-cont .iblock');
+    var dn=1;
+    for(var i=0;i<iblocks.length;i++){
+      var b=iblocks[i], t=b.querySelector('.nv-itit').value;
+      if(t) await sb.from('itinerario').insert({viaje_id:vid,dia:dn++,titulo:t,ciudad:b.querySelector('.nv-iciudad').value,descripcion:b.querySelector('.nv-idesc').value,tip:b.querySelector('.nv-itip').value});
+    }
+    toast('¡Viaje creado! ✓');
+    await loadAll();
+    gp('viajes');
+  } catch(e) { toast('Error: '+e.message); }
+  btn.textContent = 'Crear viaje'; btn.disabled = false;
+}
+
+// NUEVO CLIENTE
+async function createCliente() {
+  if(!sb) return;
+  var nombre=document.getElementById('nc-nombre').value.trim();
+  var email=document.getElementById('nc-email').value.trim();
+  if(!nombre||!email){ toast('Completá nombre y email'); return; }
+  await sb.from('clientes').insert({nombre:nombre,email:email,telefono:document.getElementById('nc-tel').value});
+  toast('Cliente guardado ✓');
+  ['nc-nombre','nc-email','nc-tel','nc-doc'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  await loadClientes();
+  gp('cli');
+}
+
+// RENDER CLIENTES
+function renderClientes() {
+  var el = document.getElementById('cli-list');
+  if(!allClientes.length){ el.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>No hay clientes aún.</p></div>'; return; }
+  el.innerHTML = allClientes.map(function(c){
+    var vjs = allViajes.filter(function(v){ return v.cliente_id===c.id; });
+    var act=vjs.find(function(v){ return v._st==='Activo'; });
+    var prox=vjs.find(function(v){ return v._st==='Proximo'; });
+    var est=act?'En curso':prox?'Próximo':vjs.length?'Finalizado':'Sin viajes';
+    var cls=act?'b-ok':prox?'b-inf':'b-pa';
+    return '<div class="crow"><div class="av" style="background:'+gc(c.nombre)+';">'+gi(c.nombre)+'</div>'
+      +'<div class="vi"><div class="vn">'+c.nombre+'</div><div class="vd">'+c.email+(c.telefono?' · '+c.telefono:'')+'</div><div class="vt">'+vjs.length+' viaje'+(vjs.length!==1?'s':'')+'</div></div>'
+      +'<span class="badge '+cls+'">'+est.toUpperCase()+'</span>'
+      +'<div class="vacts"><button class="iab" style="border-color:#F7C1C1;" onclick="delCliente(''+c.id+'',''+c.nombre.replace(/'/g,'')+'')" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button></div>'
+      +'</div>';
+  }).join('');
+}
+async function delCliente(id,nombre){ if(!sb||!confirm('¿Eliminar a '+nombre+'?')) return; await sb.from('clientes').delete().eq('id',id); toast('Eliminado ✓'); await loadClientes(); }
+
+// PRESUPUESTOS
+function pCard(p) {
+  var cn = p.clientes && p.clientes.nombre ? p.clientes.nombre : 'Cliente';
+  var estados = ['Solicitado','Creado','Enviado','Modificado','Confirmado','Viaje creado'];
+  var opts = estados.map(function(e){ return '<option'+(e===p.estado?' selected':'')+'>'+e+'</option>'; }).join('');
+  return '<div class="pcard"><div class="ptop">'
+    +'<div class="pav" style="background:'+gc(cn)+';">'+gi(cn)+'</div>'
+    +'<div class="pinn"><div class="pnum">'+new Date(p.created_at).toLocaleDateString('es-AR')+'</div><div class="pname">'+cn+'</div><div class="pdest">'+(p.destino||'—')+' · '+(p.pasajeros||1)+' pax</div></div>'
+    +'<div class="pr"><div class="pprice">'+(p.precio_total||'—')+'</div><div class="ppax">'+(p.precio_por_persona?p.precio_por_persona+' / pax':'')+'</div><span class="spill '+(presCls[p.estado]||'s-cre')+'">'+(p.estado||'').toUpperCase()+'</span></div>'
+    +'</div><div class="pfoot"><span class="pmeta">Válido hasta: '+fd(p.validez)+'</span>'
+    +'<div class="pacts">'
+    +'<select style="font-size:10px;padding:4px 8px;border-radius:8px;border:1px solid var(--br);background:var(--bg);color:var(--n);cursor:pointer;" onchange="updatePres(''+p.id+'',this.value)">'+opts+'</select>'
+    +'<button class="iab2 gr" onclick="toast('Marcado como confirmado ✓')" title="Confirmar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>'
+    +'<button class="iab2" onclick="delPres(''+p.id+'')" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>'
+    +'</div></div></div>';
+}
+function renderPres() {
+  var el = document.getElementById('pres-list');
+  el.innerHTML = allPres.length ? allPres.map(pCard).join('') : '<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>No hay presupuestos aún.</p></div>';
+}
+function updatePipeline() {
+  var ests=['Solicitado','Creado','Enviado','Modificado','Confirmado','Viaje creado'];
+  var ids=['pp-sol','pp-cre','pp-env','pp-mod','pp-con','pp-via'];
+  ests.forEach(function(e,i){ document.getElementById(ids[i]).textContent=allPres.filter(function(p){ return p.estado===e; }).length; });
+}
+async function updatePres(id,estado){ if(!sb) return; await sb.from('presupuestos').update({estado:estado}).eq('id',id); toast('Estado actualizado ✓'); await loadPres(); }
+async function delPres(id){ if(!sb||!confirm('¿Eliminar?')) return; await sb.from('presupuestos').delete().eq('id',id); toast('Eliminado ✓'); await loadPres(); }
+
+// NUEVO PRESUPUESTO
+function npOpen() {
+  var sel = document.getElementById('np-cli');
+  if(sel){ sel.innerHTML='<option value="">— Seleccionar —</option>'; allClientes.forEach(function(c){ sel.innerHTML+='<option value="'+c.id+'">'+c.nombre+'</option>'; }); }
+  npV=[]; npH=[]; npA=[];
+  var lists=['np-vlist','np-hlist','np-alist'];
+  lists.forEach(function(id){ var el=document.getElementById(id); if(el) el.innerHTML=''; });
+  var tot=document.getElementById('np-totdisp'); if(tot) tot.textContent='—';
+  gp('np');
+  var sbi=document.getElementById('sbi-np'); if(sbi) sbi.classList.add('on');
+}
+function npAddV(){ var r=document.getElementById('np-vruta').value.trim(), a=document.getElementById('np-vaero').value.trim(); if(!r) return; npV.push({r:r,a:a}); document.getElementById('np-vruta').value=''; document.getElementById('np-vaero').value=''; npRenderList('np-vlist',npV,'npV','#FFE8E8','#A00D1F'); }
+function npAddH(){ var n=document.getElementById('np-hnombre').value.trim(), c=document.getElementById('np-hciudad').value.trim(); if(!n) return; npH.push({r:n,a:c}); document.getElementById('np-hnombre').value=''; document.getElementById('np-hciudad').value=''; npRenderList('np-hlist',npH,'npH','#FFF0E0','#7A3800'); }
+function npAddA(){ var n=document.getElementById('np-anombre').value.trim(), d=document.getElementById('np-adet').value.trim(); if(!n) return; npA.push({r:n,a:d}); document.getElementById('np-anombre').value=''; document.getElementById('np-adet').value=''; npRenderList('np-alist',npA,'npA','#E8EAF6','#0D1F75'); }
+function npRenderList(id,arr,varName,bg,col){
+  var el=document.getElementById(id); if(!el) return;
+  el.innerHTML=arr.map(function(x,i){
+    return '<div class="nprow"><div class="npic" style="background:'+bg+';"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="npnm">'+x.r+'</div><div class="npsd">'+(x.a||'')+'</div><button class="npdel" onclick="'+varName+'.splice('+i+',1);npRenderList(''+id+'','+varName+',''+varName+'',''+bg+'',''+col+'')">×</button></div>';
+  }).join('');
+}
+function npAddDes(){ var row=document.createElement('div'); row.className='desrow'; row.innerHTML='<input placeholder="Concepto"/><input placeholder="USD 0" oninput="npCalc()"/><button onclick="this.closest('.desrow').remove()">×</button>'; document.getElementById('np-desrows').appendChild(row); }
+function npCalc(){
+  var ppax=document.getElementById('np-ppax').value.replace(/[^0-9]/g,'');
+  var pax=parseInt(document.getElementById('np-pax2').value||2)||2;
+  var lbl=document.getElementById('np-paxlbl'); if(lbl) lbl.textContent=pax+(pax===1?' persona':' personas');
+  var n=parseInt(ppax);
+  var disp=document.getElementById('np-totdisp');
+  if(disp) disp.textContent=(!isNaN(n)&&n>0)?'USD '+(n*pax).toLocaleString('es-AR'):'—';
+}
+async function savePresupuesto(){
+  if(!sb){ toast('Sin conexión'); return; }
+  var destino=document.getElementById('np-destino').value.trim();
+  if(!destino){ toast('Completá el destino'); return; }
+  var btn=document.getElementById('np-save-btn'); btn.textContent='Guardando...'; btn.disabled=true;
+  var desglose='';
+  document.querySelectorAll('#np-desrows .desrow').forEach(function(r){ var c=r.querySelectorAll('input')[0].value.trim(), v=r.querySelectorAll('input')[1].value.trim(); if(c) desglose+=c+(v?': '+v:'')+'
+'; });
+  if(npV.length) desglose+='VUELOS: '+npV.map(function(x){ return x.r; }).join(' | ')+'
+';
+  if(npH.length) desglose+='HOTELES: '+npH.map(function(x){ return x.r; }).join(' | ')+'
+';
+  if(npA.length) desglose+='ACTIVIDADES: '+npA.map(function(x){ return x.r; }).join(', ')+'
+';
+  var tot=document.getElementById('np-totdisp').textContent;
+  var res=await sb.from('presupuestos').insert({
+    cliente_id:document.getElementById('np-cli').value||null,
+    destino:destino,
+    fecha_inicio:document.getElementById('np-inicio').value||null,
+    fecha_fin:document.getElementById('np-fin').value||null,
+    noches:parseInt(document.getElementById('np-noches').value||0)||null,
+    pasajeros:parseInt(document.getElementById('np-pax').value||1),
+    agente:document.getElementById('np-agente').value,
+    validez:document.getElementById('np-validez').value||null,
+    estado:document.getElementById('np-estado').value,
+    precio_total:tot!=='—'?tot:'',
+    precio_por_persona:document.getElementById('np-ppax').value,
+    condiciones:desglose+'---
+'+document.getElementById('np-cond').value,
+  });
+  btn.textContent='Guardar presupuesto'; btn.disabled=false;
+  if(res.error){ toast('Error: '+res.error.message); return; }
+  toast('¡Presupuesto guardado! ✓');
+  await loadPres();
+  gp('pres');
+}
+
+// COPY
+function openCopy(id,cn,destino){ copyId=id; document.getElementById('copy-sub').textContent='Copiando: "'+destino+'" de '+cn; document.getElementById('copy-modal').classList.add('open'); }
+function closeCopy(){ document.getElementById('copy-modal').classList.remove('open'); }
+async function doCopy(){
+  if(!sb){ toast('Sin conexión'); return; }
+  var nombre=document.getElementById('copy-nombre').value.trim();
+  var email=document.getElementById('copy-email').value.trim();
+  if(!nombre||!email){ toast('Completá nombre y email'); return; }
+  var or=await sb.from('viajes').select('*').eq('id',copyId).single();
+  if(!or.data){ toast('Error al copiar'); return; }
+  var cliId;
+  var ex=await sb.from('clientes').select('id').eq('email',email).maybeSingle();
+  if(ex.data){ cliId=ex.data.id; } else { var nc=await sb.from('clientes').insert({nombre:nombre,email:email}).select().single(); cliId=nc.data.id; }
+  var nv=await sb.from('viajes').insert({cliente_id:cliId,destino:nombre,fecha_inicio:document.getElementById('copy-inicio').value||or.data.fecha_inicio,fecha_fin:document.getElementById('copy-fin').value||or.data.fecha_fin,estado:'Proximo',agente:or.data.agente,descripcion:or.data.descripcion}).select().single();
+  var tables=['vuelos','hoteles','actividades','itinerario'];
+  for(var i=0;i<tables.length;i++){
+    var rows=await sb.from(tables[i]).select('*').eq('viaje_id',copyId);
+    if(rows.data&&rows.data.length){
+      var newRows=rows.data.map(function(r){ var obj=Object.assign({},r); delete obj.id; obj.viaje_id=nv.data.id; return obj; });
+      await sb.from(tables[i]).insert(newRows);
+    }
+  }
+  closeCopy(); toast('¡Viaje copiado! ✓'); await loadAll();
+}
+
+// DOCS
+function trig(id){ var el=document.getElementById(id); if(el) el.click(); }
+function addDoc(listId,input,label){
+  if(!input.files.length) return;
+  var f=input.files[0];
+  var sz=f.size<1048576?Math.round(f.size/1024)+' KB':(f.size/1048576).toFixed(1)+' MB';
+  var el=document.createElement('div'); el.className='docrow';
+  el.innerHTML='<div class="docic"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="docnm">'+f.name+'</div><div class="docsz">'+sz+'</div><span class="docbadge">'+label+'</span><button class="docdel" onclick="this.closest('.docrow').remove()">×</button>';
+  var list=document.getElementById(listId); if(list) list.appendChild(el);
+  input.value=''; toast('Documento cargado ✓');
+}
+
+</script>
+
+</body>
+</html>
